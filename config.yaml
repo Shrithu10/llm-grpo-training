@@ -1,0 +1,38 @@
+# ── Model ──────────────────────────────────────────────────────────────────────
+model_name: "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+# ── LoRA (recommended — reduces trainable params ~95%, prevents forgetting) ───
+use_lora:      true
+lora_r:        16      # rank; higher = more capacity, more memory
+lora_alpha:    32      # scaling factor (typically 2 * lora_r)
+lora_dropout:  0.05
+
+# ── Group sampling ─────────────────────────────────────────────────────────────
+group_size:      4     # N completions per prompt; higher = lower-variance baseline
+max_new_tokens:  256
+temperature:     0.9   # keep >0.7 for exploration; anneal if training diverges
+top_k:           50
+
+# ── Optimisation ───────────────────────────────────────────────────────────────
+learning_rate:      5.0e-6  # keep small; RL fine-tuning is sensitive to LR
+grad_clip:          1.0
+num_epochs:         3
+accumulation_steps: 4       # effective batch = group_size * accumulation_steps
+warmup_steps:       50      # linear warmup before cosine decay
+
+# ── GRPO-specific ──────────────────────────────────────────────────────────────
+kl_beta:             0.04   # KL penalty weight; 0 disables KL term
+clip_epsilon:        0.2    # PPO-style ratio clipping range [1-e, 1+e]
+normalize_advantages: true
+
+# ── Logging and checkpoints ────────────────────────────────────────────────────
+log_every:      1            # console print every N questions
+save_every:     100          # checkpoint every N questions (0 = only final)
+checkpoint_dir: "checkpoints"
+log_path:       "results/training_log.jsonl"
+
+# ── Dataset ────────────────────────────────────────────────────────────────────
+# Set to "gsm8k" to use the real dataset (requires: pip install datasets)
+# Set to "demo" to use the built-in 10-question arithmetic set
+dataset:          "gsm8k"
+max_train_samples: 500      # cap for faster iteration; null = use all

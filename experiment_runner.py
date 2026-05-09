@@ -10,11 +10,12 @@ Usage
   python experiment_runner.py --real       # real model (edit MODEL_NAME below)
 """
 
+import re
 from evaluation import run_inference, compute_metrics, save_results
 
-# ── Dataset ───────────────────────────────────────────────────────────────────
+# ── Demo dataset (fallback when datasets library is unavailable) ──────────────
 
-EVAL_DATASET = [
+DEMO_QUESTIONS = [
     {"question": "What is 12 * 8?",   "answer": "96"},
     {"question": "What is 15 + 27?",  "answer": "42"},
     {"question": "What is 100 - 37?", "answer": "63"},
@@ -36,6 +37,39 @@ EVAL_DATASET = [
     {"question": "What is 72 / 8?",   "answer": "9"},
     {"question": "What is 14 * 6?",   "answer": "84"},
 ]
+
+_GSM8K_ANSWER_RE = re.compile(r'####\s*(-?[\d,]+)')
+
+
+def load_gsm8k_eval(max_samples: int = 20) -> list[dict]:
+    """
+    Load evaluation questions from the GSM8K test split.
+
+    Returns a list of {"question": str, "answer": str} dicts.
+    Falls back to DEMO_QUESTIONS if the datasets library is not installed.
+    """
+    try:
+        from datasets import load_dataset  # type: ignore
+        ds = load_dataset("gsm8k", "main", split="test")
+        samples = []
+        for item in ds:
+            m = _GSM8K_ANSWER_RE.search(item["answer"])
+            if m is None:
+                continue
+            answer = m.group(1).replace(",", "")
+            samples.append({"question": item["question"], "answer": answer})
+            if len(samples) >= max_samples:
+                break
+        if samples:
+            print(f"[dataset] Loaded {len(samples)} GSM8K eval questions.")
+            return samples
+    except Exception as exc:
+        print(f"[dataset] GSM8K unavailable ({exc}); using demo questions.")
+    return DEMO_QUESTIONS
+
+
+# Select dataset: GSM8K if available, otherwise demo fallback
+EVAL_DATASET = load_gsm8k_eval(max_samples=20)
 
 TOKEN_BUDGETS  = [50, 100, 200, 400]
 METHODS        = ["sft", "simple_pg", "grpo"]
@@ -259,7 +293,8 @@ def run_all(
     print("\n" + "#" * 65)
     print("  Phase 3: Inference Scaling and Evaluation")
     print(f"  Mode    : {'REAL MODEL' if model else 'MockModel (deterministic)'}")
-    print(f"  Dataset : {len(EVAL_DATASET)} questions")
+    src = "GSM8K" if EVAL_DATASET is not DEMO_QUESTIONS else "demo"
+    print(f"  Dataset : {len(EVAL_DATASET)} questions ({src})")
     print("#" * 65)
 
     scaling_results = run_inference_scaling(model, tokenizer, device)

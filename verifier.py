@@ -67,9 +67,37 @@ def _has_required_format(response: str) -> bool:
 
 
 def _parse_answer(response: str) -> str | None:
-    """Return stripped content of the last <answer> tag, or None."""
+    """
+    Extract the final answer from a response.
+
+    Priority
+    --------
+    1. Last <answer>...</answer> tag  (primary, always preferred)
+    2. 'Answer: 42' / 'The answer is 42' patterns (natural language fallback)
+    3. '= 42' at the end of a line  (math notation fallback)
+
+    Fallbacks recover reward signal when the model almost follows the format
+    but omits a closing tag or uses plain English instead of XML markup.
+    """
+    # Primary: exact tag match
     hits = _extract_tags(response, 'answer')
-    return hits[-1].strip() if hits else None
+    if hits:
+        return hits[-1].strip()
+
+    # Fallback 1: natural-language answer phrases
+    m = re.search(
+        r'(?:the\s+)?answer(?:\s+is)?[:\s]+(-?[\d,]+(?:\.\d+)?)',
+        response, re.IGNORECASE
+    )
+    if m:
+        return m.group(1).replace(',', '')
+
+    # Fallback 2: '= <number>' at end of a line (common in step-by-step math)
+    m = re.search(r'=\s*(-?[\d,]+(?:\.\d+)?)\s*$', response, re.MULTILINE)
+    if m:
+        return m.group(1).replace(',', '')
+
+    return None
 
 
 def _try_float(text: str | None) -> float | None:
