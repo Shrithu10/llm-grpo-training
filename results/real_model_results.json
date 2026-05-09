@@ -1,0 +1,43 @@
+{
+  "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "n_samples": 20,
+  "inference_scaling": {
+    "50": {
+      "accuracy": 0.0,
+      "avg_reward": 0.0,
+      "correction_rate": 0.0
+    },
+    "100": {
+      "accuracy": 0.25,
+      "avg_reward": 0.7019,
+      "correction_rate": 0.05
+    },
+    "200": {
+      "accuracy": 0.5,
+      "avg_reward": 0.9094,
+      "correction_rate": 0.1
+    },
+    "400": {
+      "accuracy": 0.75,
+      "avg_reward": 1.1155,
+      "correction_rate": 0.15
+    }
+  },
+  "baseline_comparison": {
+    "sft": {
+      "accuracy": 0.45,
+      "avg_reward": 0.8048,
+      "correction_rate": 0.05
+    },
+    "simple_pg": {
+      "accuracy": 0.6,
+      "avg_reward": 0.9607,
+      "correction_rate": 0.1
+    },
+    "grpo": {
+      "accuracy": 0.75,
+      "avg_reward": 1.1155,
+      "correction_rate": 0.15
+    }
+  }
+}

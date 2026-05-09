@@ -44,7 +44,7 @@ def _save(fig, path: str) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"  Plot saved → {path}")
+    print(f"  Plot saved -> {path}")
 
 
 # ── Plot 1: Inference Scaling ─────────────────────────────────────────────────

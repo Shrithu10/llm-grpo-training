@@ -62,8 +62,8 @@ _T_WRONG = (
     "<answer>{wrong}</answer>"
 )
 
-# No structural tags → format_error in error taxonomy
-_T_FORMAT_ERROR = "The answer is {answer}."
+# No structural tags at all — simulates a model that ignores the format prompt
+_T_FORMAT_ERROR = "I need to think about this problem more carefully before answering."
 
 
 # ── MockModel ─────────────────────────────────────────────────────────────────
